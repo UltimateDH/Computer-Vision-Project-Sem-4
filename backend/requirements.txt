@@ -1,0 +1,47 @@
+# ==============================================================================
+# FastAPI Backend & Server Core
+# ==============================================================================
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.6.0
+python-dotenv>=1.0.1
+multipart>=0.2.4
+
+# ==============================================================================
+# PostgreSQL Database Ecosystem & Connection Management
+# ==============================================================================
+# sqlalchemy manages the ORM; psycopg2 interacts directly with postgres.
+# pool_pre_ping inside your engine code ensures connection pooling over the cloud works.
+sqlalchemy>=2.0.25
+psycopg2-binary>=2.9.9
+
+# ==============================================================================
+# Computer Vision & Deep Learning Core Frameworks
+# ==============================================================================
+# PyTorch core for visual embeddings and similarity modeling
+torch>=2.2.0 --extra-index-url https://download.pytorch.org/whl/cpu
+torchvision>=0.17.0 --extra-index-url https://download.pytorch.org/whl/cpu
+
+# TensorFlow core (useful for alternative modeling, processing graphs, or specific RL agents)
+tensorflow>=2.15.0
+
+# Traditional computer vision utilities and image pre-processing
+opencv-python-headless>=4.9.0.80
+pillow>=10.2.0
+numpy>=1.26.4
+scikit-image>=0.22.0
+
+# ==============================================================================
+# Reinforcement Learning & Simulation Frameworks
+# ==============================================================================
+# Farama Gymnasium provides standard API environments for training RL agents
+gymnasium>=0.29.1
+# Stable-Baselines3 provides robust, tested implementations of algorithms like PPO
+stable-baselines3[extra]>=2.2.1
+
+# ==============================================================================
+# Data Analysis & Mathematical Utilities
+# ==============================================================================
+pandas>=2.2.0
+scikit-learn>=1.4.0
+scipy>=1.12.0
