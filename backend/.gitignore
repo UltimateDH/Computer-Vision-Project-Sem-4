@@ -1,0 +1,139 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.pyt
+*.pyc
+*.pdb
+*.egg-info/
+.eggs/
+*.egg
+*.whl
+build/
+dist/
+.installed.cfg
+.python-version
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.cache/
+.coverage
+.coverage.*
+.nox/
+.pytest_cache/
+.pyre/
+.mypy_cache/
+.dmypy.json
+.dmypy.json
+.idea/
+.vscode/
+.pytest_cache/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+venv.bak/
+venv_old/
+
+# Conda
+.conda/
+conda-meta/
+pkgs/
+envs/
+conda-bld/
+.condarc
+
+# Environment variables
+.env
+.env.*
+*.env
+
+# FastAPI / general Python web
+instance/
+.webassets-cache
+
+# Database files
+*.sqlite3
+*.db
+*.db-journal
+*.sql
+*.dump
+
+# PostgreSQL
+pgdata/
+postgres_data/
+*.pid
+*.log
+
+# Logs
+*.log
+logs/
+
+# TensorFlow
+*.ckpt
+*.ckpt.index
+*.ckpt.data-*
+saved_model.pb
+saved_model.pbtxt
+variables/
+tensorboard/
+.tfhub-cache/
+
+# IDEs and editors
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.class
+*.jar
+*.war
+*.ear
+
+# Coverage reports
+.coverage
+coverage.xml
+*,cover
+
+# Static and media files
+staticfiles/
+media/
+
+# Python packaging
+pip-wheel-metadata/
+share/python-wheels/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc
+*.bak
+*.tmp
+*.swp
+*~
