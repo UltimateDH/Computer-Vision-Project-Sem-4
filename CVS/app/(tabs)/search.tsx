@@ -5,18 +5,18 @@ export default function SearchScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.header}>AI Recommendations</Text>
 
-      <Text style={styles.section}>🏆 Best Overall Choice</Text>
+      <Text style={styles.section}>Best Overall Choice</Text>
 
       <View style={styles.card}>
         <Image
           source={{
-            uri: 'https://picsum.photos/300',
+            uri: 'https://americanhatmakers.com/cdn/shop/products/cabana-ivory-a_900x900_aee9ff0e-45c2-4ab8-b48a-95e25446365f.jpg?v=1714775440&width=1000',
           }}
           style={styles.image}
         />
 
         <Text style={styles.productName}>
-          Nike Air Max 270
+          HAT
         </Text>
 
         <Text style={styles.rating}>
@@ -35,13 +35,13 @@ export default function SearchScreen() {
       </View>
 
       <Text style={styles.section}>
-        💰 Best Budget Option
+        Best Budget Option
       </Text>
 
       <View style={styles.smallCard} />
 
       <Text style={styles.section}>
-        ⭐ Highest Rated
+        Highest Rated
       </Text>
 
       <View style={styles.smallCard} />

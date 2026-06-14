@@ -1,9 +1,11 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-    StyleSheet,
-    Switch,
-    Text,
-    View,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
 } from 'react-native';
 
 export default function ProfileScreen() {
@@ -43,25 +45,35 @@ export default function ProfileScreen() {
           Privacy Policy
         </Text>
       </View>
+
+    <Pressable
+    style={styles.logoutButton}
+    onPress={() => router.replace('/login')}
+    >
+    <Text style={styles.logoutText}>
+      Logout
+    </Text>
+    </Pressable>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+container: {
     flex: 1,
     backgroundColor: '#F8F9FB',
     padding: 20,
   },
 
-  header: {
+header: {
     fontSize: 32,
     fontWeight: '700',
     marginTop: 50,
     marginBottom: 25,
   },
 
-  card: {
+card: {
     backgroundColor: 'white',
     borderRadius: 18,
     padding: 20,
@@ -72,8 +84,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  setting: {
+setting: {
     fontSize: 16,
     fontWeight: '500',
+  },
+
+logoutButton: {
+  marginTop: 30,
+  backgroundColor: '#EF4444',
+  padding: 16,
+  borderRadius: 18,
+  alignItems: 'center',
+  },
+
+logoutText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '600',
   },
 });

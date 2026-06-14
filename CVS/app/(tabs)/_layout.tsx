@@ -7,16 +7,16 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
 
-        tabBarStyle: {
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
-          borderTopWidth: 0,
-          backgroundColor: '#FFFFFF',
-        },
-
         tabBarActiveTintColor: '#7C3AED',
         tabBarInactiveTintColor: '#999',
+
+        tabBarStyle: {
+          height: 70,
+          paddingTop: 10,
+          paddingBottom: 10,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 0,
+        },
       }}
     >
       <Tabs.Screen
@@ -25,7 +25,7 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons
-              name="home"
+              name="home-outline"
               size={size}
               color={color}
             />
@@ -34,12 +34,26 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="search"
+       name="search"
         options={{
-          title: 'Results',
+        title: 'Search',
+        tabBarIcon: ({ color, size }) => (
+        <Ionicons
+        name="search-outline"
+        size={size}
+        color={color}
+      />
+    ),
+  }}
+/>
+
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
           tabBarIcon: ({ color, size }) => (
             <Ionicons
-              name="search"
+              name="time-outline"
               size={size}
               color={color}
             />
@@ -53,7 +67,7 @@ export default function TabLayout() {
           title: 'Saved',
           tabBarIcon: ({ color, size }) => (
             <Ionicons
-              name="heart"
+              name="bookmark-outline"
               size={size}
               color={color}
             />
@@ -67,7 +81,7 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons
-              name="person"
+              name="person-outline"
               size={size}
               color={color}
             />
