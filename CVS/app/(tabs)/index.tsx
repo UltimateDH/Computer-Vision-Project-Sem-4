@@ -6,10 +6,14 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 export default function HomeScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const uploadImage = async () => {
+
   const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    quality: 1,
+  mediaTypes: ['images'],
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 1,
   });
+
 
   if (!result.canceled) {
     setImageUri(result.assets[0].uri);
@@ -26,7 +30,9 @@ const takePhoto = async () => {
   }
 
   const result = await ImagePicker.launchCameraAsync({
-    quality: 1,
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 1,
   });
 
   if (!result.canceled) {
@@ -38,8 +44,6 @@ const takePhoto = async () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
     <View style={styles.container}>
-      {/* Greeting */}
-      <Text style={styles.greeting}>Good Morning 👋</Text>
 
       {/* Hero Title */}
       <Text style={styles.title}>
