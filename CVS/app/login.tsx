@@ -1,14 +1,59 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const validateAndLogin = () => {
+    let valid = true;
+
+    // Clear previous errors
+    setEmailError('');
+    setPasswordError('');
+
+    // Email validation
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      valid = false;
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      setEmailError('Enter a valid email address');
+      valid = false;
+    }
+
+    // Password validation
+    if (!password) {
+      setPasswordError('Password is required');
+      valid = false;
+    } else if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      valid = false;
+    }
+
+    if (!valid) {
+      return;
+    }
+
+    router.replace('/(tabs)');
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>🛍️</Text>
 
-      <Text style={styles.title}>
-        Welcome Back
-      </Text>
+      <Text style={styles.title}>Welcome Back</Text>
 
       <Text style={styles.subtitle}>
         Sign in to continue
@@ -16,17 +61,36 @@ export default function LoginScreen() {
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#999"
         style={styles.input}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
       />
+
+      {emailError ? (
+        <Text style={styles.errorText}>{emailError}</Text>
+      ) : null}
 
       <TextInput
         placeholder="Password"
+        placeholderTextColor="#999"
         secureTextEntry
         style={styles.input}
+        value={password}
+        onChangeText={setPassword}
       />
 
-      <Pressable style={styles.loginButton}>
-        <Text style={styles.loginText} onPress={() => router.push('/(tabs)')}>
+      {passwordError ? (
+        <Text style={styles.errorText}>{passwordError}</Text>
+      ) : null}
+
+      <Pressable
+        style={styles.loginButton}
+        onPress={validateAndLogin}
+      >
+        <Text style={styles.loginText}>
           Login
         </Text>
       </Pressable>
@@ -43,9 +107,7 @@ export default function LoginScreen() {
         <Pressable
           onPress={() => router.push('/signup')}
         >
-          <Text style={styles.link}>
-            {' '}Sign Up
-          </Text>
+          <Text style={styles.link}> Sign Up</Text>
         </Pressable>
       </View>
     </View>
@@ -83,7 +145,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 15,
     padding: 16,
-    marginBottom: 15,
+    marginBottom: 8,
+  },
+
+  errorText: {
+    color: '#DC2626',
+    marginBottom: 12,
+    marginLeft: 4,
+    fontSize: 13,
   },
 
   loginButton: {
