@@ -10,7 +10,7 @@ python-dotenv>=1.0.1
 multipart>=0.2.4
 supabase
 psycopg2-binary
-
+werkzeug
 # ==============================================================================
 # PostgreSQL Database Ecosystem & Connection Management
 # ==============================================================================
@@ -31,7 +31,7 @@ opencv-python-headless>=4.9.0.80
 pillow>=10.2.0
 numpy>=1.26.4
 scikit-image>=0.22.0
-
+python-jose[cryptography]
 # ==============================================================================
 # Reinforcement Learning & Simulation Frameworks
 # ==============================================================================
