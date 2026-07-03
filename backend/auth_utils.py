@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, UTC
 from werkzeug.security import check_password_hash, generate_password_hash
 from jose import jwt, JWTError
 
-SECRET_KEY=os.environ.get("SECRETE_KEY")
+SECRET_KEY=os.environ.get("SECRET_KEY")
 Algorithm="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440 #one day
 
