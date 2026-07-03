@@ -19,7 +19,7 @@ def signup(payload:SignUpUsers, db:Session=Depends(get_db)):
     new_user = users(
     username=payload.username,
     email=payload.email,
-    password=create_hash(payload.password),   # hash before storing, always
+    password=create_hash(payload.password),   
     phone_num=payload.phone_num,
     address=payload.address
     )
