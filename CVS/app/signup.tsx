@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import {
   Pressable,
   StyleSheet,
@@ -7,34 +8,36 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { signup } from '../utils/api';
 
 export default function SignupScreen() {
-  const [fullName, setFullName] = useState('');
+  const [username, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNum, setPhoneNum] = useState('');
+  const [address, setAddress] = useState('');
 
   const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [serverError, setServerError] = useState('');
 
-  const validateAndSignup = () => {
+  const validateAndSignup = async () => {
     let valid = true;
 
-    // Clear previous errors
     setFullNameError('');
     setEmailError('');
     setPasswordError('');
     setConfirmPasswordError('');
+    setServerError('');
 
-    // Full name validation
-    if (!fullName.trim()) {
-      setFullNameError('Full name is required');
+    if (!username.trim()) {
+      setFullNameError('Username is required');
       valid = false;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email.trim()) {
@@ -45,7 +48,6 @@ export default function SignupScreen() {
       valid = false;
     }
 
-    // Password validation
     if (!password) {
       setPasswordError('Password is required');
       valid = false;
@@ -54,7 +56,6 @@ export default function SignupScreen() {
       valid = false;
     }
 
-    // Confirm password validation
     if (!confirmPassword) {
       setConfirmPasswordError('Please confirm your password');
       valid = false;
@@ -67,31 +68,35 @@ export default function SignupScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    try {
+      const { access_token } = await signup(
+        username,
+        email,
+        password,
+        phoneNum || undefined,
+        address || undefined
+      );
+      await SecureStore.setItemAsync('token', access_token);
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      setServerError(err.message);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>🚀</Text>
-
-      <Text style={styles.title}>
-        Create Account
-      </Text>
-
-      <Text style={styles.subtitle}>
-        Join the AI Shopping Assistant
-      </Text>
+      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.subtitle}>Join the AI Shopping Assistant</Text>
 
       <TextInput
         placeholder="Full Name"
         placeholderTextColor="#999"
         style={styles.input}
-        value={fullName}
+        value={username}
         onChangeText={setFullName}
       />
-      {fullNameError ? (
-        <Text style={styles.errorText}>{fullNameError}</Text>
-      ) : null}
+      {fullNameError ? <Text style={styles.errorText}>{fullNameError}</Text> : null}
 
       <TextInput
         placeholder="Email"
@@ -102,9 +107,7 @@ export default function SignupScreen() {
         value={email}
         onChangeText={setEmail}
       />
-      {emailError ? (
-        <Text style={styles.errorText}>{emailError}</Text>
-      ) : null}
+      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
       <TextInput
         placeholder="Password"
@@ -114,9 +117,7 @@ export default function SignupScreen() {
         value={password}
         onChangeText={setPassword}
       />
-      {passwordError ? (
-        <Text style={styles.errorText}>{passwordError}</Text>
-      ) : null}
+      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
       <TextInput
         placeholder="Confirm Password"
@@ -126,27 +127,34 @@ export default function SignupScreen() {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      {confirmPasswordError ? (
-        <Text style={styles.errorText}>
-          {confirmPasswordError}
-        </Text>
-      ) : null}
+      {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
 
-      <Pressable
-        style={styles.signupButton}
-        onPress={validateAndSignup}
-      >
-        <Text style={styles.signupText}>
-          Create Account
-        </Text>
+      <TextInput
+        placeholder="Phone Number (optional)"
+        placeholderTextColor="#999"
+        keyboardType="phone-pad"
+        style={styles.input}
+        value={phoneNum}
+        onChangeText={setPhoneNum}
+      />
+
+      <TextInput
+        placeholder="Address (optional)"
+        placeholderTextColor="#999"
+        style={styles.input}
+        value={address}
+        onChangeText={setAddress}
+      />
+
+      {serverError ? <Text style={styles.errorText}>{serverError}</Text> : null}
+
+      <Pressable style={styles.signupButton} onPress={validateAndSignup}>
+        <Text style={styles.signupText}>Create Account</Text>
       </Pressable>
 
       <View style={styles.footer}>
         <Text>Already have an account?</Text>
-
-        <Pressable
-          onPress={() => router.push('/login')}
-        >
+        <Pressable onPress={() => router.push('/login')}>
           <Text style={styles.link}> Login</Text>
         </Pressable>
       </View>

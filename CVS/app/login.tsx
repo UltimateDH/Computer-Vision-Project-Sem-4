@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import {
   Pressable,
   StyleSheet,
@@ -7,33 +8,39 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { login } from '../utils/api';
 
 export default function LoginScreen() {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const [usernameError, setUsernameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [serverError, setServerError] = useState('');
 
-  const validateAndLogin = () => {
+  const validateAndLogin = async () => {
     let valid = true;
 
-    // Clear previous errors
+    setUsernameError('');
     setEmailError('');
     setPasswordError('');
+    setServerError('');
 
-    // Email validation
+    if (!username.trim()) {
+      setUsernameError('Username is required');
+      valid = false;
+    }
+
     if (!email.trim()) {
       setEmailError('Email is required');
       valid = false;
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError('Enter a valid email address');
       valid = false;
     }
 
-    // Password validation
     if (!password) {
       setPasswordError('Password is required');
       valid = false;
@@ -46,18 +53,31 @@ export default function LoginScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    try {
+      // Added username to the login API call
+      const { access_token } = await login(username, email, password);
+      await SecureStore.setItemAsync('token', access_token);
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      setServerError(err.message);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>🛍️</Text>
-
       <Text style={styles.title}>Welcome Back</Text>
+      <Text style={styles.subtitle}>Sign in to continue</Text>
 
-      <Text style={styles.subtitle}>
-        Sign in to continue
-      </Text>
+      <TextInput
+        placeholder="Username"
+        placeholderTextColor="#999"
+        style={styles.input}
+        autoCapitalize="none"
+        value={username}
+        onChangeText={setUsername}
+      />
+      {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
 
       <TextInput
         placeholder="Email"
@@ -68,10 +88,7 @@ export default function LoginScreen() {
         value={email}
         onChangeText={setEmail}
       />
-
-      {emailError ? (
-        <Text style={styles.errorText}>{emailError}</Text>
-      ) : null}
+      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
       <TextInput
         placeholder="Password"
@@ -81,32 +98,21 @@ export default function LoginScreen() {
         value={password}
         onChangeText={setPassword}
       />
+      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-      {passwordError ? (
-        <Text style={styles.errorText}>{passwordError}</Text>
-      ) : null}
+      {serverError ? <Text style={styles.errorText}>{serverError}</Text> : null}
 
-      <Pressable
-        style={styles.loginButton}
-        onPress={validateAndLogin}
-      >
-        <Text style={styles.loginText}>
-          Login
-        </Text>
+      <Pressable style={styles.loginButton} onPress={validateAndLogin}>
+        <Text style={styles.loginText}>Login</Text>
       </Pressable>
 
       <Pressable>
-        <Text style={styles.forgot}>
-          Forgot Password?
-        </Text>
+        <Text style={styles.forgot}>Forgot Password?</Text>
       </Pressable>
 
       <View style={styles.footer}>
         <Text>Don't have an account?</Text>
-
-        <Pressable
-          onPress={() => router.push('/signup')}
-        >
+        <Pressable onPress={() => router.push('/signup')}>
           <Text style={styles.link}> Sign Up</Text>
         </Pressable>
       </View>

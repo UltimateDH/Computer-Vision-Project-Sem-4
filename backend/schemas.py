@@ -11,6 +11,7 @@ class SignUpUsers(BaseModel):
 
 
 class loginrequest(BaseModel):
+    username: str
     email:EmailStr
     password:str
 

@@ -9,9 +9,9 @@ from auth_utils import SECRET_KEY, Algorithm,create_hash,verify_pwd,create_acces
 
 router=APIRouter()
 
-router.post("/signup",response_model=create_access_token)
+@router.post("/signup",response_model=TokenRequest)
 def signup(payload:SignUpUsers, db:Session=Depends(get_db)):
-    existing=db.query(users).filter_by(
+    existing=db.query(users).filter(
         (users.username == payload.username) | (users.email == payload.email)
     ).first()
     if existing:
@@ -31,10 +31,10 @@ def signup(payload:SignUpUsers, db:Session=Depends(get_db)):
     return {"access_token":token}
 
 
-router.post("/login",response_model=create_access_token)
+@router.post("/login",response_model=TokenRequest)
 def login(payload:loginrequest, db:Session=Depends(get_db)):
-    user=db.query(users).filter_by(users.username==payload.username).first()
-    if not user or not (verify_pwd(payload.password,users.password)) or not (user.email==payload.email):
+    user=db.query(users).filter(users.username==payload.username).first()
+    if not user or not (verify_pwd(user.password,payload.password)) or not (user.email==payload.email):
         raise HTTPException(status_code=401, detail="Invalid username or passoword or invalid email address!")
     token=create_access_token({"sub":str(user.user_id)})
     return {"access_token":token}
