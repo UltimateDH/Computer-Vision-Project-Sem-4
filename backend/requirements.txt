@@ -11,6 +11,7 @@ multipart>=0.2.4
 supabase
 psycopg2-binary
 werkzeug
+pydantic[email]
 # ==============================================================================
 # PostgreSQL Database Ecosystem & Connection Management
 # ==============================================================================

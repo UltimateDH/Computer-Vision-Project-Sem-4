@@ -31,7 +31,7 @@ def signup(payload:SignUpUsers, db:Session=Depends(get_db)):
     return {"access_token":token}
 
 
-router.post("\login",response_model=create_access_token)
+router.post("/login",response_model=create_access_token)
 def login(payload:loginrequest, db:Session=Depends(get_db)):
     user=db.query(users).filter_by(users.username==payload.username).first()
     if not user or not (verify_pwd(payload.password,users.password)) or not (user.email==payload.email):
