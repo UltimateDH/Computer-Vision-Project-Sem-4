@@ -1,36 +1,80 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
+import type { SearchResponse, SearchResult } from '../../utils/api';
+import { API_URL } from '../../utils/api';
 
 export default function SearchScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const { data } = useLocalSearchParams<{ data?: string }>();
+
+  const parsed: SearchResponse | null = data ? JSON.parse(data) : null;
+  const results = parsed?.results ?? [];
+
+  if (!parsed || results.length === 0) {
+    return (
+      <ScrollView style={styles.container}>
+        <Text style={styles.header}>AI Recommendations</Text>
+        <Text style={styles.empty}>No search yet — take or upload a photo to get recommendations.</Text>
+      </ScrollView>
+    );
+  }
+
+  const bestOverall = results[0];
+  const cheapest = [...results].sort((a, b) => a.price - b.price)[0];
+  const highestRated = [...results].sort((a, b) => b.rating - a.rating)[0];
+  const rest = results.filter(
+    (r) => r.id !== bestOverall.id && r.id !== cheapest.id && r.id !== highestRated.id
+  );
+
+  const renderCard = (item: SearchResult) => (
+    <View style={styles.card} key={item.id}>
+      <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.image} />
+      <Text style={styles.productName}>{item.name}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+      <Text style={styles.rating}>{item.rating} ({item.reviews.toLocaleString()} Reviews)</Text>
+      <Text style={styles.price}>${item.price}</Text>
+      <Text style={styles.match}>{Math.round(item.similarity_score * 100)}% match</Text>
+      <Pressable style={styles.button}>
+        <Text style={styles.buttonText}>View Details</Text>
+      </Pressable>
+    </View>
+  );
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.header}>AI Recommendations</Text>
 
       <Text style={styles.section}>Best Overall Choice</Text>
-
-      <View style={styles.card}>
-        <Image
-          source={{
-            uri: 'https://americanhatmakers.com/cdn/shop/products/cabana-ivory-a_900x900_aee9ff0e-45c2-4ab8-b48a-95e25446365f.jpg?v=1714775440&width=1000',
-          }}
-          style={styles.image}
-        />
-        <Text style={styles.productName}>HAT</Text>
-        <Text style={styles.rating}>⭐ 4.8 (12,000 Reviews)</Text>
-        <Text style={styles.price}>$129</Text>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>View Details</Text>
-        </Pressable>
-      </View>
+      {renderCard(bestOverall)}
 
       <Text style={styles.section}>Best Budget Option</Text>
-      <View style={styles.smallCard} />
+      {renderCard(cheapest)}
 
       <Text style={styles.section}>Highest Rated</Text>
-      <View style={styles.smallCard} />
+      {renderCard(highestRated)}
+
+      {rest.length > 0 && (
+        <>
+          <Text style={styles.section}>More Matches</Text>
+          <FlatList
+            data={rest}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            renderItem={({ item }) => (
+              <View style={styles.smallCardRow}>
+                <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.image} />
+                <View style={styles.smallInfo}>
+                  <Text style={styles.smallName}>{item.name}</Text>
+                  <Text style={styles.smallDescription} numberOfLines={2}>{item.description}</Text>
+                  <Text style={styles.smallPrice}>${item.price} · {Math.round(item.similarity_score * 100)}% match</Text>
+                </View>
+              </View>
+            )}
+          />
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -39,13 +83,24 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background, padding: 20 },
     header: { fontSize: 32, fontWeight: '700', color: colors.text, marginTop: 50, marginBottom: 20 },
+    empty: { color: colors.textSecondary, textAlign: 'center', marginTop: 40 },
     section: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: 12 },
     card: { backgroundColor: colors.card, borderRadius: 20, padding: 15, marginBottom: 25 },
     image: { width: '100%', height: 220, borderRadius: 16 },
     productName: { fontSize: 20, fontWeight: '600', color: colors.text, marginTop: 15 },
+    description: { color: colors.textSecondary, marginTop: 4 },
     rating: { color: colors.textSecondary, marginTop: 6 },
     price: { color: colors.primary, fontSize: 22, fontWeight: '700', marginTop: 8 },
+    match: { color: colors.textMuted, marginTop: 4, fontSize: 12 },
     button: { backgroundColor: colors.primary, padding: 15, borderRadius: 12, marginTop: 15 },
     buttonText: { color: 'white', textAlign: 'center', fontWeight: '600' },
-    smallCard: { height: 120, backgroundColor: colors.card, borderRadius: 20, marginBottom: 20 },
+    smallCardRow: {
+      flexDirection: 'row', backgroundColor: colors.card, borderRadius: 16,
+      padding: 12, marginBottom: 12, alignItems: 'center',
+    },
+    smallImage: { width: 64, height: 64, borderRadius: 10, backgroundColor: '#DDD' },
+    smallInfo: { marginLeft: 12, flex: 1 },
+    smallName: { fontWeight: '600', color: colors.text },
+    smallDescription: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+    smallPrice: { color: colors.primary, fontSize: 12, marginTop: 4, fontWeight: '500' },
   });

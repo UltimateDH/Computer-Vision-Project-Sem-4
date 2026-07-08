@@ -119,3 +119,41 @@ export async function uploadProfilePicture(uri: string) {
   if (!res.ok) throw new Error(data.detail || 'Failed to upload profile picture');
   return data;
 }
+
+export type SearchResult = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  similarity_score: number;
+  image_url: string;
+};
+
+export type SearchResponse = {
+  query_image: { id: string; url: string };
+  results: SearchResult[];
+};
+
+export async function searchImage(uri: string, source: 'camera' | 'album'): Promise<SearchResponse> {
+  const headers = await authHeaders();
+
+  const formData = new FormData();
+  formData.append('file', {
+    uri,
+    name: `${source}-${Date.now()}.jpg`,
+    type: 'image/jpeg',
+  } as any);
+  formData.append('source', source);
+
+  const res = await fetch(`${API_URL}/images/search`, {
+    method: 'POST',
+    headers, // no Content-Type — fetch sets the multipart boundary itself
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Search failed');
+  return data as SearchResponse;
+}
