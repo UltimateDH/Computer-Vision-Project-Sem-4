@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { API_URL, getMe, uploadProfilePicture } from '../../utils/api';
+import { useTheme } from '@/theme/ThemeContext';
 
 type Profile = {
   user_id: number;
@@ -25,16 +26,17 @@ type Profile = {
 };
 
 export default function ProfileScreen() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, toggleTheme, colors } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const styles = createStyles(colors);
 
   const fetchProfile = useCallback(async () => {
     try {
       const data = await getMe();
       setProfile(data);
     } catch (e) {
-      // getMe throws + redirects to /login if token invalid, handled elsewhere
+      // getMe throws + redirects to /login if token invalid
     }
   }, []);
 
@@ -54,17 +56,17 @@ export default function ProfileScreen() {
 
     if (result.canceled) return;
 
-  setUploadingPic(true);
+    setUploadingPic(true);
     try {
       const updated = await uploadProfilePicture(result.assets[0].uri);
-      console.log('Upload response:', JSON.stringify(updated));   // <-- add this line
       setProfile((prev) => (prev ? { ...prev, profile_picture_url: updated.profile_picture_url } : prev));
     } catch (e: any) {
-    Alert.alert('Upload failed', e.message);
-      } finally {
-    setUploadingPic(false);
+      Alert.alert('Upload failed', e.message);
+    } finally {
+      setUploadingPic(false);
     }
-  }
+  };
+
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync('token');
     router.replace('/login');
@@ -72,9 +74,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.header}>Profile</Text>
-
-      {/* Avatar + name/email */}
+      {/* Header block — purple-tinted card like the mockup */}
       <View style={styles.profileHeader}>
         <Pressable onPress={handleChangePicture} disabled={uploadingPic}>
           {profile?.profile_picture_url ? (
@@ -84,7 +84,7 @@ export default function ProfileScreen() {
             />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Ionicons name="person" size={40} color="#999" />
+              <Ionicons name="person" size={40} color={colors.textMuted} />
             </View>
           )}
 
@@ -101,27 +101,30 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{profile?.email ?? ''}</Text>
       </View>
 
-      {/* Settings */}
       <Text style={styles.sectionTitle}>Settings</Text>
 
       <View style={styles.card}>
         <Text style={styles.setting}>Dark Mode</Text>
-        <Switch value={darkMode} onValueChange={setDarkMode} />
+        <Switch
+          value={isDark}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#ccc', true: colors.primary }}
+        />
       </View>
 
       <Pressable style={styles.card} onPress={() => {}}>
         <Text style={styles.setting}>Notifications</Text>
-        <Ionicons name="chevron-forward" size={20} color="#999" />
+        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
       </Pressable>
 
       <Pressable style={styles.card} onPress={() => {}}>
         <Text style={styles.setting}>About</Text>
-        <Ionicons name="chevron-forward" size={20} color="#999" />
+        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
       </Pressable>
 
       <Pressable style={styles.card} onPress={() => {}}>
         <Text style={styles.setting}>Privacy Policy</Text>
-        <Ionicons name="chevron-forward" size={20} color="#999" />
+        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
       </Pressable>
 
       <Pressable style={styles.logoutButton} onPress={handleLogout}>
@@ -131,85 +134,86 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FB',
-    padding: 20,
-  },
-  header: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginTop: 50,
-    marginBottom: 25,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#DDD',
-  },
-  avatarPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  editBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#7C3AED',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#F8F9FB',
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: 12,
-  },
-  email: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  setting: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  logoutButton: {
-    marginTop: 15,
-    backgroundColor: '#EF4444',
-    padding: 16,
-    borderRadius: 18,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      padding: 20,
+    },
+    profileHeader: {
+      alignItems: 'center',
+      backgroundColor: colors.primaryLight,
+      borderRadius: 24,
+      paddingVertical: 40,
+      marginTop: 50,
+      marginBottom: 30,
+    },
+    avatar: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: '#DDD',
+    },
+    avatarPlaceholder: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    editBadge: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: colors.primaryLight,
+    },
+    name: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 12,
+    },
+    email: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 12,
+      marginLeft: 4,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      padding: 20,
+      marginBottom: 15,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    setting: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    logoutButton: {
+      marginTop: 15,
+      backgroundColor: colors.danger,
+      padding: 16,
+      borderRadius: 18,
+      alignItems: 'center',
+    },
+    logoutText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });

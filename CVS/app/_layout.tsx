@@ -1,20 +1,18 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { AppThemeProvider, useTheme } from '@/theme/ThemeContext';
 
 export const unstable_settings = {
   initialRouteName: 'login',
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function ThemedStack() {
+  const { isDark } = useTheme();
 
   return (
-    <ThemeProvider
-      value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-    >
+    <NavigationThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
@@ -22,7 +20,15 @@ export default function RootLayout() {
         <Stack.Screen name="modal" />
       </Stack>
 
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </NavigationThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <ThemedStack />
+    </AppThemeProvider>
   );
 }
