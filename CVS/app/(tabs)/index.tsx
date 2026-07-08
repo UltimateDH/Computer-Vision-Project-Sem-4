@@ -1,57 +1,71 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { uploadImage as uploadToBackend } from '../../utils/api'; // renamed to avoid clashing with local functions
 
 export default function HomeScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const uploadImage = async () => {
+  const [uploading, setUploading] = useState(false);
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-  mediaTypes: ['images'],
-  allowsEditing: true,
-  aspect: [1, 1],
-  quality: 1,
-  });
+  const handlePickFromLibrary = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setImageUri(uri);
+      await sendToBackend(uri, 'album');
+    }
+  };
 
-  if (!result.canceled) {
-    setImageUri(result.assets[0].uri);
-  }
-};
+  const handleTakePhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
 
-const takePhoto = async () => {
-  const permission =
-    await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Camera permission is required');
+      return;
+    }
 
-  if (!permission.granted) {
-    alert('Camera permission is required');
-    return;
-  }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
-  const result = await ImagePicker.launchCameraAsync({
-  allowsEditing: true,
-  aspect: [1, 1],
-  quality: 1,
-  });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setImageUri(uri);
+      await sendToBackend(uri, 'camera');
+    }
+  };
 
-  if (!result.canceled) {
-    setImageUri(result.assets[0].uri);
-  }
-};
-
+  const sendToBackend = async (uri: string, source: 'camera' | 'album') => {
+    setUploading(true);
+    try {
+      await uploadToBackend(uri, source);
+      // no navigation here on purpose — user stays on Home and sees the preview;
+      // History tab will pick it up next time it's focused
+    } catch (e: any) {
+      Alert.alert('Upload failed', e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
     <View style={styles.container}>
 
-      {/* Hero Title */}
       <Text style={styles.title}>
         Find anything{'\n'}
         with a photo
       </Text>
 
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#999" />
         <TextInput
@@ -61,31 +75,26 @@ const takePhoto = async () => {
         />
       </View>
 
-      {/* Action Cards */}
       <View style={styles.actionRow}>
-        <Pressable style={styles.cameraCard} onPress={takePhoto}>
+        <Pressable style={styles.cameraCard} onPress={handleTakePhoto} disabled={uploading}>
           <Ionicons name="camera" size={34} color="white" />
           <Text style={styles.cardTitleWhite}>Take Photo</Text>
           <Text style={styles.cardSubtitleWhite}>Use camera</Text>
         </Pressable>
 
-        <Pressable style={styles.uploadCard} onPress={uploadImage}>
+        <Pressable style={styles.uploadCard} onPress={handlePickFromLibrary} disabled={uploading}>
           <Ionicons name="image" size={34} color="#3B82F6" />
           <Text style={styles.cardTitle}>Upload Image</Text>
           <Text style={styles.cardSubtitle}>From gallery</Text>
         </Pressable>
-        </View>
+      </View>
 
-        {imageUri && (
-        <Image
-        source={{ uri: imageUri }}
-        style={styles.previewImage}
-        />
-        )}
+      {uploading && <ActivityIndicator style={{ marginTop: 20 }} />}
 
+      {imageUri && (
+        <Image source={{ uri: imageUri }} style={styles.previewImage} />
+      )}
 
-
-      {/* Recent Searches */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Recent Searches</Text>
         <Text style={styles.seeAll}>See all</Text>

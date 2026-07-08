@@ -85,7 +85,6 @@ export default function SignupScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>🚀</Text>
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Join the AI Shopping Assistant</Text>
 

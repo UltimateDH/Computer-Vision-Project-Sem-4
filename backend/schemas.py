@@ -19,3 +19,11 @@ class loginrequest(BaseModel):
 class TokenRequest(BaseModel):
     access_token: str
     token_type: str="bearer"
+
+class UserProfile(BaseModel):
+    user_id: int
+    username: str
+    email: str
+    phone_num: Optional[str] = None
+    address: Optional[str] = None
+    profile_picture_url: Optional[str] = None

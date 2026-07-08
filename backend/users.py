@@ -9,3 +9,4 @@ class users(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     phone_num = Column(String, nullable=True)
     address = Column(String, nullable=True)
+    profile_picture = Column(String, nullable=True)  # path to the profile picture
