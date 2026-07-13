@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
 import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
-import type { SearchResponse, SearchResult } from '../../utils/api';
 import { API_URL } from '../../utils/api';
+import type { SearchResponse, SearchResult } from '../../utils/api';
 
 export default function SearchScreen() {
   const { colors } = useTheme();
@@ -22,18 +22,22 @@ export default function SearchScreen() {
   }
 
   const bestOverall = results[0];
-  const cheapest = [...results].sort((a, b) => a.price - b.price)[0];
-  const highestRated = [...results].sort((a, b) => b.rating - a.rating)[0];
+  const cheapest = [...results]
+    .filter((r) => r.id !== bestOverall.id)
+    .sort((a, b) => a.price - b.price)[0] ?? bestOverall;
+  const highestRated = [...results]
+    .filter((r) => r.id !== bestOverall.id && r.id !== cheapest.id)
+    .sort((a, b) => b.rating - a.rating)[0] ?? cheapest;
   const rest = results.filter(
     (r) => r.id !== bestOverall.id && r.id !== cheapest.id && r.id !== highestRated.id
   );
 
-  const renderCard = (item: SearchResult) => (
-    <View style={styles.card} key={item.id}>
+  const renderCard = (item: SearchResult, sectionKey: string) => (
+    <View style={styles.card} key={`${sectionKey}-${item.id}`}>
       <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.image} />
       <Text style={styles.productName}>{item.name}</Text>
       <Text style={styles.description}>{item.description}</Text>
-      <Text style={styles.rating}>{item.rating} ({item.reviews.toLocaleString()} Reviews)</Text>
+      <Text style={styles.rating}>⭐ {item.rating} ({item.reviews.toLocaleString()} Reviews)</Text>
       <Text style={styles.price}>${item.price}</Text>
       <Text style={styles.match}>{Math.round(item.similarity_score * 100)}% match</Text>
       <Pressable style={styles.button}>
@@ -47,13 +51,13 @@ export default function SearchScreen() {
       <Text style={styles.header}>AI Recommendations</Text>
 
       <Text style={styles.section}>Best Overall Choice</Text>
-      {renderCard(bestOverall)}
+      {renderCard(bestOverall, 'best')}
 
       <Text style={styles.section}>Best Budget Option</Text>
-      {renderCard(cheapest)}
+      {renderCard(cheapest, 'budget')}
 
       <Text style={styles.section}>Highest Rated</Text>
-      {renderCard(highestRated)}
+      {renderCard(highestRated, 'rated')}
 
       {rest.length > 0 && (
         <>
@@ -64,7 +68,7 @@ export default function SearchScreen() {
             scrollEnabled={false}
             renderItem={({ item }) => (
               <View style={styles.smallCardRow}>
-                <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.image} />
+                <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.smallImage} />
                 <View style={styles.smallInfo}>
                   <Text style={styles.smallName}>{item.name}</Text>
                   <Text style={styles.smallDescription} numberOfLines={2}>{item.description}</Text>
