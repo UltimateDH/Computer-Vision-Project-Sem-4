@@ -1,5 +1,4 @@
 import os
-import random
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -8,26 +7,10 @@ from database import get_db
 from auth import get_current_user
 from users import users
 import image_store
+from recommendation_engine import run_recommendation_pipeline
+from bandit_singleton import bandit, DISPLAYED_FEATURES
 
 router = APIRouter()
-
-FAKE_PRODUCTS = [
-    {"name": "Minimalist Ceramic Vase", "description": "Matte-finish stoneware vase, handcrafted, 10in tall.", "price": 42, "rating": 4.6, "reviews": 890},
-    {"name": "Vintage Leather Messenger Bag", "description": "Full-grain leather, brass buckles, fits 15in laptop.", "price": 189, "rating": 4.8, "reviews": 3200},
-    {"name": "Wireless Noise-Cancelling Headphones", "description": "Over-ear, 30hr battery, adaptive ANC.", "price": 249, "rating": 4.7, "reviews": 15400},
-    {"name": "Woven Cotton Throw Blanket", "description": "Soft cotton weave, 50x60in, machine washable.", "price": 58, "rating": 4.5, "reviews": 1200},
-    {"name": "Stainless Steel Pour-Over Kettle", "description": "Gooseneck spout, 1L capacity, matte black.", "price": 65, "rating": 4.4, "reviews": 780},
-    {"name": "Oak Wood Desk Organizer", "description": "Solid oak, 4 compartments, felt-lined base.", "price": 74, "rating": 4.6, "reviews": 540},
-    {"name": "Terracotta Plant Pot Set", "description": "Set of 3, drainage holes, unglazed finish.", "price": 34, "rating": 4.3, "reviews": 2100},
-    {"name": "Merino Wool Beanie", "description": "100% merino, ribbed knit, one size fits most.", "price": 39, "rating": 4.7, "reviews": 4300},
-    {"name": "Brushed Brass Table Lamp", "description": "Adjustable arm, linen shade, warm LED bulb included.", "price": 118, "rating": 4.5, "reviews": 960},
-    {"name": "Canvas Weekender Duffel", "description": "Waxed canvas, leather straps, 45L capacity.", "price": 145, "rating": 4.8, "reviews": 2700},
-    {"name": "Ceramic Pour-Over Coffee Dripper", "description": "Single-cup, glazed interior, wood collar.", "price": 32, "rating": 4.4, "reviews": 610},
-    {"name": "Recycled Glass Tumbler Set", "description": "Set of 4, 12oz, hand-blown texture.", "price": 28, "rating": 4.2, "reviews": 430},
-    {"name": "Linen Throw Pillow Cover", "description": "18x18in, hidden zipper, stonewashed linen.", "price": 24, "rating": 4.3, "reviews": 890},
-    {"name": "Walnut Wood Watch Stand", "description": "Solid walnut, minimalist single-watch display.", "price": 46, "rating": 4.6, "reviews": 320},
-    {"name": "Cast Iron Skillet", "description": "10.25in, pre-seasoned, oven-safe to 500°F.", "price": 45, "rating": 4.9, "reviews": 8900},
-]
 
 
 @router.post("/upload")
@@ -79,8 +62,9 @@ async def search_image(
     if source not in ("camera", "album"):
         source = "album"
 
+    image_bytes = await file.read()
+
     try:
-        image_bytes = await file.read()
         image = image_store.save_image(
             db=db,
             image_bytes=image_bytes,
@@ -92,31 +76,38 @@ async def search_image(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-    # TODO: replace this block with real ResNet18 embedding + similarity search
-    # once the model is wired up. Keep the response shape the same so the
-    # frontend doesn't need to change.
-    results = []
-    for i in range(15):
-        product = FAKE_PRODUCTS[i % len(FAKE_PRODUCTS)]
-        results.append({
-            "id": f"placeholder-{image.id}-{i}",
-            "name": product["name"],
-            "description": product["description"],
-            "price": product["price"],
-            "rating": product["rating"],
-            "reviews": product["reviews"],
-            "similarity_score": round(random.uniform(0.75, 0.99), 3),
-            "image_url": image_store.image_url(image),
-        })
-    results.sort(key=lambda r: r["similarity_score"], reverse=True)
+    try:
+        pipeline_result = run_recommendation_pipeline(db, image_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recommendation failed: {str(e)}")
+
+    print(f"Pipeline result: {pipeline_result}")  # Debugging line
 
     return {
         "query_image": {
             "id": image.id,
             "url": image_store.image_url(image),
         },
-        "results": results,
+        "results": pipeline_result["results"],
     }
+
+
+@router.post("/listings/{listing_id}/reward")
+def reward_listing(
+    listing_id: str,
+    reward: float = Form(1.0),
+    current_user: users = Depends(get_current_user),
+):
+    """Call this when the user clicks 'buy' on a displayed listing."""
+    feature_vector = DISPLAYED_FEATURES.get(listing_id)
+    if feature_vector is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No displayed feature vector found for this listing (may have expired or server restarted).",
+        )
+
+    bandit.update_batch([feature_vector], [reward])
+    return {"status": "ok"}
 
 
 @router.get("")

@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
-import { API_URL } from '../../utils/api';
 import type { SearchResponse, SearchResult } from '../../utils/api';
+import { rewardListing } from '../../utils/api';
 
 export default function SearchScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const { data } = useLocalSearchParams<{ data?: string }>();
+
+  const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [boughtIds, setBoughtIds] = useState<Set<string>>(new Set());
 
   const parsed: SearchResponse | null = data ? JSON.parse(data) : null;
   const results = parsed?.results ?? [];
@@ -32,19 +36,72 @@ export default function SearchScreen() {
     (r) => r.id !== bestOverall.id && r.id !== cheapest.id && r.id !== highestRated.id
   );
 
-  const renderCard = (item: SearchResult, sectionKey: string) => (
-    <View style={styles.card} key={`${sectionKey}-${item.id}`}>
-      <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.image} />
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.description}>{item.description}</Text>
-      <Text style={styles.rating}>⭐ {item.rating} ({item.reviews.toLocaleString()} Reviews)</Text>
-      <Text style={styles.price}>${item.price}</Text>
-      <Text style={styles.match}>{Math.round(item.similarity_score * 100)}% match</Text>
-      <Pressable style={styles.button}>
-        <Text style={styles.buttonText}>View Details</Text>
-      </Pressable>
-    </View>
-  );
+  const handleBuy = async (item: SearchResult) => {
+    setBuyingId(item.id);
+    try {
+      await rewardListing(item.id);
+      setBoughtIds((prev) => new Set(prev).add(item.id));
+      Alert.alert('Purchase recorded', `Thanks for buying ${item.name}!`);
+    } catch (e: any) {
+      Alert.alert('Something went wrong', e.message);
+    } finally {
+      setBuyingId(null);
+    }
+  };
+
+  const renderCard = (item: SearchResult, sectionKey: string) => {
+    const isBuying = buyingId === item.id;
+    const isBought = boughtIds.has(item.id);
+
+    return (
+      <View style={styles.card} key={`${sectionKey}-${item.id}`}>
+        <Image source={{ uri: item.image_url }} style={styles.image} />
+        <Text style={styles.productName}>{item.name}</Text>
+        <Text style={styles.description}>{item.description}</Text>
+        <Text style={styles.rating}>⭐ {item.rating} ({item.reviews.toLocaleString()} Reviews)</Text>
+        <Text style={styles.price}>${item.price}</Text>
+        <Text style={styles.match}>{Math.round(item.similarity_score * 100)}% match</Text>
+        <Pressable
+          style={[styles.button, isBought && styles.buttonBought]}
+          onPress={() => handleBuy(item)}
+          disabled={isBuying || isBought}
+        >
+          {isBuying ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>{isBought ? 'Bought ✓' : 'Buy'}</Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  };
+
+  const renderSmallCard = (item: SearchResult) => {
+    const isBuying = buyingId === item.id;
+    const isBought = boughtIds.has(item.id);
+
+    return (
+      <View style={styles.smallCardRow}>
+        <Image source={{ uri: item.image_url }} style={styles.smallImage} />
+        <View style={styles.smallInfo}>
+          <Text style={styles.smallName}>{item.name}</Text>
+          <Text style={styles.smallDescription} numberOfLines={2}>{item.description}</Text>
+          <Text style={styles.smallPrice}>${item.price} · {Math.round(item.similarity_score * 100)}% match</Text>
+        </View>
+        <Pressable
+          style={[styles.smallBuyButton, isBought && styles.buttonBought]}
+          onPress={() => handleBuy(item)}
+          disabled={isBuying || isBought}
+        >
+          {isBuying ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <Text style={styles.smallBuyButtonText}>{isBought ? '✓' : 'Buy'}</Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -66,16 +123,7 @@ export default function SearchScreen() {
             data={rest}
             keyExtractor={(item) => item.id}
             scrollEnabled={false}
-            renderItem={({ item }) => (
-              <View style={styles.smallCardRow}>
-                <Image source={{ uri: `${API_URL}${item.image_url}` }} style={styles.smallImage} />
-                <View style={styles.smallInfo}>
-                  <Text style={styles.smallName}>{item.name}</Text>
-                  <Text style={styles.smallDescription} numberOfLines={2}>{item.description}</Text>
-                  <Text style={styles.smallPrice}>${item.price} · {Math.round(item.similarity_score * 100)}% match</Text>
-                </View>
-              </View>
-            )}
+            renderItem={({ item }) => renderSmallCard(item)}
           />
         </>
       )}
@@ -96,7 +144,8 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     rating: { color: colors.textSecondary, marginTop: 6 },
     price: { color: colors.primary, fontSize: 22, fontWeight: '700', marginTop: 8 },
     match: { color: colors.textMuted, marginTop: 4, fontSize: 12 },
-    button: { backgroundColor: colors.primary, padding: 15, borderRadius: 12, marginTop: 15 },
+    button: { backgroundColor: colors.primary, padding: 15, borderRadius: 12, marginTop: 15, minHeight: 50, justifyContent: 'center' },
+    buttonBought: { backgroundColor: colors.textMuted },
     buttonText: { color: 'white', textAlign: 'center', fontWeight: '600' },
     smallCardRow: {
       flexDirection: 'row', backgroundColor: colors.card, borderRadius: 16,
@@ -107,4 +156,9 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     smallName: { fontWeight: '600', color: colors.text },
     smallDescription: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
     smallPrice: { color: colors.primary, fontSize: 12, marginTop: 4, fontWeight: '500' },
+    smallBuyButton: {
+      backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14,
+      marginLeft: 8, minWidth: 50, alignItems: 'center', justifyContent: 'center',
+    },
+    smallBuyButtonText: { color: 'white', fontWeight: '600', fontSize: 12 },
   });

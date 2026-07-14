@@ -157,3 +157,20 @@ export async function searchImage(uri: string, source: 'camera' | 'album'): Prom
   if (!res.ok) throw new Error(data.detail || 'Search failed');
   return data as SearchResponse;
 }
+
+export async function rewardListing(listingId: string, reward: number = 1.0) {
+  const headers = await authHeaders();
+
+  const formData = new FormData();
+  formData.append('reward', String(reward));
+
+  const res = await fetch(`${API_URL}/images/listings/${listingId}/reward`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Reward failed');
+  return data;
+}

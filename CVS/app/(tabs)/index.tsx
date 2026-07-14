@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import { useRouter } from 'expo-router';
 import { searchImage } from '../../utils/api';
 import { useTheme } from '@/theme/ThemeContext';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -15,6 +16,15 @@ export default function HomeScreen() {
   const [source, setSource] = useState<'camera' | 'album' | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const resizeImage = async (uri: string) => {
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }], // downscale, keeps aspect ratio
+      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
+  };
+
   const handlePickFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -23,7 +33,8 @@ export default function HomeScreen() {
       quality: 1,
     });
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      const resizedUri = await resizeImage(result.assets[0].uri);
+      setImageUri(resizedUri);
       setSource('album');
     }
   };
@@ -40,7 +51,8 @@ export default function HomeScreen() {
       quality: 1,
     });
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      const resizedUri = await resizeImage(result.assets[0].uri);
+      setImageUri(resizedUri);
       setSource('camera');
     }
   };
