@@ -50,6 +50,7 @@ export default function SearchScreen() {
   };
 
   const renderCard = (item: SearchResult, sectionKey: string) => {
+    console.log(`${item.name}:`, item.image_url);
     const isBuying = buyingId === item.id;
     const isBought = boughtIds.has(item.id);
 
