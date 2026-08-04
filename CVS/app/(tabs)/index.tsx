@@ -132,18 +132,6 @@ export default function HomeScreen() {
             </View>
           </>
         )}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Searches</Text>
-          <Text style={styles.seeAll}>See all</Text>
-        </View>
-
-        <View style={styles.recentRow}>
-          <View style={styles.recentCard} />
-          <View style={styles.recentCard} />
-          <View style={styles.recentCard} />
-          <View style={styles.recentCard} />
-        </View>
       </View>
     </ScrollView>
   );
